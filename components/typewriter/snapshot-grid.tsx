@@ -9,17 +9,18 @@ interface SnapshotGridProps {
   className?: string
 }
 
-// Predefined positions and rotations for zero-gravity effect
+// Predefined positions for clustered, overlapping zero-gravity effect
+// These positions create a pile of papers in the center
 const floatConfigs = [
-  { x: '10%', y: '8%', rotate: -5, zIndex: 3, animation: 'float-snapshot-1', delay: '0s' },
-  { x: '35%', y: '15%', rotate: 4, zIndex: 5, animation: 'float-snapshot-2', delay: '0.5s' },
-  { x: '55%', y: '5%', rotate: -2, zIndex: 4, animation: 'float-snapshot-3', delay: '1s' },
-  { x: '5%', y: '40%', rotate: 6, zIndex: 2, animation: 'float-snapshot-2', delay: '0.3s' },
-  { x: '40%', y: '45%', rotate: -4, zIndex: 6, animation: 'float-snapshot-1', delay: '0.8s' },
-  { x: '65%', y: '35%', rotate: 3, zIndex: 1, animation: 'float-snapshot-3', delay: '0.2s' },
-  { x: '15%', y: '70%', rotate: -3, zIndex: 4, animation: 'float-snapshot-2', delay: '0.6s' },
-  { x: '50%', y: '68%', rotate: 5, zIndex: 3, animation: 'float-snapshot-1', delay: '1.2s' },
-  { x: '70%', y: '60%', rotate: -6, zIndex: 2, animation: 'float-snapshot-3', delay: '0.4s' },
+  { x: '25%', y: '15%', rotate: -8, zIndex: 1, animation: 'float-snapshot-1', delay: '0s' },
+  { x: '40%', y: '10%', rotate: 5, zIndex: 3, animation: 'float-snapshot-2', delay: '0.3s' },
+  { x: '35%', y: '25%', rotate: -3, zIndex: 2, animation: 'float-snapshot-3', delay: '0.6s' },
+  { x: '20%', y: '30%', rotate: 7, zIndex: 4, animation: 'float-snapshot-2', delay: '0.2s' },
+  { x: '45%', y: '35%', rotate: -5, zIndex: 5, animation: 'float-snapshot-1', delay: '0.8s' },
+  { x: '30%', y: '40%', rotate: 4, zIndex: 6, animation: 'float-snapshot-3', delay: '0.4s' },
+  { x: '50%', y: '20%', rotate: -6, zIndex: 2, animation: 'float-snapshot-2', delay: '1s' },
+  { x: '15%', y: '45%', rotate: 8, zIndex: 3, animation: 'float-snapshot-1', delay: '0.5s' },
+  { x: '55%', y: '40%', rotate: -4, zIndex: 1, animation: 'float-snapshot-3', delay: '0.7s' },
 ]
 
 export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProps) {
@@ -35,9 +36,23 @@ export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProp
   }
 
   return (
-    <div className={cn("h-full w-full flex flex-col bg-background", className)}>
+    <div className={cn("min-h-[70vh] w-full flex flex-col bg-background", className)}>
+      {/* Header */}
+      <div className="p-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onClose}
+          className="font-serif text-sm text-foreground hover:text-muted-foreground transition-colors italic underline underline-offset-2"
+        >
+          snapshots &gt;
+        </button>
+        <span className="text-xs text-muted-foreground">
+          {snapshots.length} saved
+        </span>
+      </div>
+
       {/* Floating snapshots container */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 min-h-[55vh] overflow-visible">
         {snapshots.slice(0, 9).map((snapshot, index) => {
           const config = floatConfigs[index % floatConfigs.length]
           
@@ -78,19 +93,6 @@ export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProp
         })}
       </div>
 
-      {/* Footer with close link */}
-      <div className="p-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onClose}
-          className="font-serif text-sm text-foreground hover:text-muted-foreground transition-colors italic"
-        >
-          snapshots &gt;
-        </button>
-        <span className="text-xs text-muted-foreground">
-          {snapshots.length} saved
-        </span>
-      </div>
     </div>
   )
 }
