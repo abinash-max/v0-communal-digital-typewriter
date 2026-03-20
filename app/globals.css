@@ -87,6 +87,7 @@
   --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --font-serif: 'Playfair Display', 'Georgia', serif;
+  --font-handwritten: var(--font-caveat), 'Caveat', cursive;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -225,4 +226,52 @@
 
 .float-snapshot-3 {
   animation: float-3 8s ease-in-out infinite;
+}
+
+/* Hand-drawn / Sketchy effect styles */
+.sketchy-border {
+  position: relative;
+  border: none !important;
+}
+
+.sketchy-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid currentColor;
+  border-radius: inherit;
+  /* Create wobbly effect with multiple shadows */
+  filter: url(#sketchy-filter);
+}
+
+/* Rough paper edge effect */
+.rough-paper {
+  clip-path: polygon(
+    0% 2%, 3% 0%, 7% 1%, 12% 0%, 18% 2%, 25% 0%, 32% 1%, 
+    40% 0%, 48% 2%, 55% 0%, 62% 1%, 70% 0%, 78% 2%, 85% 0%, 
+    92% 1%, 97% 0%, 100% 2%, 100% 98%, 97% 100%, 92% 99%, 
+    85% 100%, 78% 98%, 70% 100%, 62% 99%, 55% 100%, 48% 98%,
+    40% 100%, 32% 99%, 25% 100%, 18% 98%, 12% 100%, 7% 99%,
+    3% 100%, 0% 98%
+  );
+}
+
+/* Hand-drawn line wobble animation */
+@keyframes wobble {
+  0%, 100% { 
+    transform: rotate(-0.5deg) translateX(-1px); 
+  }
+  25% { 
+    transform: rotate(0.3deg) translateX(0.5px); 
+  }
+  50% { 
+    transform: rotate(-0.2deg) translateX(1px); 
+  }
+  75% { 
+    transform: rotate(0.4deg) translateX(-0.5px); 
+  }
+}
+
+.hand-drawn-wobble {
+  animation: wobble 3s ease-in-out infinite;
 }

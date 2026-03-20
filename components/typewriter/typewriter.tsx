@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useCallback, useRef, useState } from 'react'
+
 import { cn } from '@/lib/utils'
 import { Paper } from './paper'
 import { TypewriterKeyboard } from './typewriter-keyboard'
@@ -110,33 +111,62 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
         </button>
       </div>
 
-      {/* Paper area - above the typewriter */}
-      <div 
-        className="relative mb-6 border border-paper-shadow/50 rounded-sm overflow-hidden bg-paper"
-        style={{
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)'
-        }}
-      >
-        <Paper
-          ref={paperRef}
-          lines={lines}
-          currentLineIndex={currentLineIndex}
-          currentPosition={currentPosition}
-        />
-      </div>
-
-      {/* Visual typewriter keyboard */}
+      {/* Paper area - inserted into typewriter roller */}
       <div className="relative">
-        <TypewriterKeyboard pressedKey={pressedKey} />
+        {/* Paper sheet - positioned to look like it's coming out of the typewriter */}
+        <div 
+          className="relative mx-auto mb-[-20px] z-10"
+          style={{
+            width: '85%',
+            maxWidth: '480px',
+          }}
+        >
+          {/* Paper with rough edges */}
+          <div 
+            className="relative bg-white rough-paper"
+            style={{
+              boxShadow: '2px 4px 12px rgba(0,0,0,0.1), -1px 2px 8px rgba(0,0,0,0.05)',
+              minHeight: '200px',
+            }}
+          >
+            {/* Hand-drawn paper border effect */}
+            <svg 
+              className="absolute inset-0 w-full h-full text-gray-300 pointer-events-none"
+              preserveAspectRatio="none"
+              style={{ filter: 'url(#sketchy)' }}
+            >
+              <rect 
+                x="1" y="1" 
+                width="calc(100% - 2px)" 
+                height="calc(100% - 2px)" 
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+            </svg>
+            
+            <Paper
+              ref={paperRef}
+              lines={lines}
+              currentLineIndex={currentLineIndex}
+              currentPosition={currentPosition}
+            />
+          </div>
+        </div>
+        
+        {/* Visual typewriter keyboard */}
+        <div className="relative">
+          <TypewriterKeyboard pressedKey={pressedKey} />
         
         {/* Focus hint overlay */}
-        {!isFocused && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-xl z-10">
-            <p className="text-sm text-muted-foreground bg-background/80 px-4 py-2 rounded-full shadow-sm">
-              Click to start typing
-            </p>
-          </div>
-        )}
+          {!isFocused && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-xl z-10">
+              <p className="text-sm text-muted-foreground bg-background/80 px-4 py-2 rounded-full shadow-sm">
+                Click to start typing
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Hint text */}
