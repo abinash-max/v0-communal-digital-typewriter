@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Paper } from './paper'
 import { Carriage } from './carriage'
@@ -32,6 +32,7 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
   } = useTypewriter()
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
 
   // Focus handling for keyboard input
   useEffect(() => {
@@ -71,6 +72,8 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
       ref={containerRef}
       tabIndex={0}
       onClick={handleContainerClick}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
       className={cn(
         "relative w-full max-w-2xl mx-auto outline-none",
         "focus:ring-0",
@@ -126,7 +129,7 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
         </div>
 
         {/* Focus hint */}
-        {containerRef.current !== document.activeElement && (
+        {!isFocused && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px] rounded-sm">
             <p className="text-sm text-muted-foreground">
               Click to start typing
