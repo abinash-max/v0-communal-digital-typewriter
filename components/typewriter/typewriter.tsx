@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Paper } from './paper'
-import { Carriage } from './carriage'
+import { TypewriterKeyboard } from './typewriter-keyboard'
 import { InkRibbon } from './ink-ribbon'
 import { useTypewriter } from '@/hooks/use-typewriter'
 import type { Snapshot } from '@/hooks/use-typewriter'
@@ -18,17 +18,15 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
     lines,
     currentLineIndex,
     currentPosition,
-    carriageOffset,
     inkColor,
     isCarriageReturning,
+    pressedKey,
     paperRef,
     handleKeyDown,
     carriageReturn,
     scrollToCurrentLine,
     takeSnapshot,
     changeInkColor,
-    CHARS_PER_LINE,
-    CHAR_WIDTH
   } = useTypewriter()
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -38,9 +36,6 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-
-    // Make container focusable
-    container.focus()
 
     const onKeyDown = (e: KeyboardEvent) => {
       handleKeyDown(e)
@@ -65,7 +60,21 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
     onSnapshot?.(snapshot)
   }, [takeSnapshot, onSnapshot])
 
-  const maxCarriageOffset = CHARS_PER_LINE * CHAR_WIDTH
+  // Handle Enter key for carriage return
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        carriageReturn()
+      }
+    }
+
+    container.addEventListener('keydown', onKeyDown)
+    return () => container.removeEventListener('keydown', onKeyDown)
+  }, [carriageReturn])
 
   return (
     <div
@@ -75,73 +84,65 @@ export function Typewriter({ onSnapshot, className }: TypewriterProps) {
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
       className={cn(
-        "relative w-full max-w-2xl mx-auto outline-none",
+        "relative w-full max-w-3xl mx-auto outline-none",
         "focus:ring-0",
         className
       )}
     >
-      {/* Typewriter frame */}
-      <div className="relative">
-        {/* Top controls bar */}
-        <div className="flex items-center justify-between mb-4 px-2">
-          <InkRibbon 
-            currentColor={inkColor} 
-            onColorChange={changeInkColor} 
-          />
-          
-          <button
-            type="button"
-            onClick={handleTakeSnapshot}
-            className={cn(
-              "text-xs uppercase tracking-wider text-muted-foreground",
-              "hover:text-foreground transition-colors",
-              "border-b border-dashed border-muted-foreground/50 hover:border-foreground/50",
-              "pb-0.5"
-            )}
-          >
-            take a snapshot
-          </button>
-        </div>
-
-        {/* Carriage mechanism */}
-        <div className="mb-2">
-          <Carriage
-            offset={carriageOffset}
-            maxOffset={maxCarriageOffset}
-            isReturning={isCarriageReturning}
-            onCarriageReturn={carriageReturn}
-          />
-        </div>
-
-        {/* Paper area */}
-        <div 
-          className="relative border border-paper-shadow/50 rounded-sm overflow-hidden"
-          style={{
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)'
-          }}
+      {/* Controls bar */}
+      <div className="flex items-center justify-between mb-4 px-2">
+        <InkRibbon 
+          currentColor={inkColor} 
+          onColorChange={changeInkColor} 
+        />
+        
+        <button
+          type="button"
+          onClick={handleTakeSnapshot}
+          className={cn(
+            "text-xs uppercase tracking-wider text-muted-foreground",
+            "hover:text-foreground transition-colors",
+            "border-b border-dashed border-muted-foreground/50 hover:border-foreground/50",
+            "pb-0.5"
+          )}
         >
-          <Paper
-            ref={paperRef}
-            lines={lines}
-            currentLineIndex={currentLineIndex}
-            currentPosition={currentPosition}
-          />
-        </div>
+          take a snapshot
+        </button>
+      </div>
 
-        {/* Focus hint */}
+      {/* Paper area - above the typewriter */}
+      <div 
+        className="relative mb-6 border border-paper-shadow/50 rounded-sm overflow-hidden bg-paper"
+        style={{
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)'
+        }}
+      >
+        <Paper
+          ref={paperRef}
+          lines={lines}
+          currentLineIndex={currentLineIndex}
+          currentPosition={currentPosition}
+        />
+      </div>
+
+      {/* Visual typewriter keyboard */}
+      <div className="relative">
+        <TypewriterKeyboard pressedKey={pressedKey} />
+        
+        {/* Focus hint overlay */}
         {!isFocused && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-[1px] rounded-sm">
-            <p className="text-sm text-muted-foreground">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-xl z-10">
+            <p className="text-sm text-muted-foreground bg-background/80 px-4 py-2 rounded-full shadow-sm">
               Click to start typing
             </p>
           </div>
         )}
       </div>
 
-      {/* Keyboard hint */}
-      <div className="mt-4 text-center">
+      {/* Hint text */}
+      <div className="mt-6 text-center">
         <p className="text-xs text-muted-foreground">
-          Use your keyboard to type. Drag the carriage handle left to start a new line.
+          Press Enter for a new line. Watch the keys as you type.
         </p>
       </div>
     </div>

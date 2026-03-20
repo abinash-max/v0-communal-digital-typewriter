@@ -36,6 +36,7 @@ export function useTypewriter() {
   const [inkColor, setInkColor] = useState<InkColor>('black')
   const [snapshots, setSnapshots] = useState<Snapshot[]>([])
   const [isCarriageReturning, setIsCarriageReturning] = useState(false)
+  const [pressedKey, setPressedKey] = useState<string | null>(null)
   
   const paperRef = useRef<HTMLDivElement>(null)
   const lineHeight = 24 // 1.5rem in pixels
@@ -47,6 +48,12 @@ export function useTypewriter() {
     // Prevent default for keys we handle
     if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Tab') {
       e.preventDefault()
+    }
+
+    // Show key press animation
+    if (e.key.length === 1 || e.key === ' ') {
+      setPressedKey(e.key)
+      setTimeout(() => setPressedKey(null), 100)
     }
 
     if (e.key === 'Tab') {
@@ -160,6 +167,7 @@ export function useTypewriter() {
     inkColor,
     snapshots,
     isCarriageReturning,
+    pressedKey,
     paperRef,
     handleKeyDown,
     carriageReturn,
