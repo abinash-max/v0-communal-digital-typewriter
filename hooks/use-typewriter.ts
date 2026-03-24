@@ -24,8 +24,8 @@ export interface Snapshot {
   timestamp: Date
 }
 
-const CHARS_PER_LINE = 52
-const CHAR_WIDTH = 9.6 // pixels per character in monospace
+const CHARS_PER_LINE = 38
+const CHAR_WIDTH = 10.0 // pixels per character at 16px JetBrains Mono
 
 export function useTypewriter() {
   const [lines, setLines] = useState<TypewriterLine[]>([
@@ -39,7 +39,7 @@ export function useTypewriter() {
   const [pressedKey, setPressedKey] = useState<string | null>(null)
   
   const paperRef = useRef<HTMLDivElement>(null)
-  const lineHeight = 24 // 1.5rem in pixels
+  const lineHeight = 28
 
   // Calculate carriage offset based on current typing position
   const carriageOffset = currentPosition * CHAR_WIDTH
@@ -53,7 +53,7 @@ export function useTypewriter() {
     // Show key press animation
     if (e.key.length === 1 || e.key === ' ') {
       setPressedKey(e.key)
-      setTimeout(() => setPressedKey(null), 100)
+      setTimeout(() => setPressedKey(null), 120)
     }
 
     if (e.key === 'Tab') {

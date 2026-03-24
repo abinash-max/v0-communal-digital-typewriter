@@ -11,62 +11,65 @@ interface PaperProps {
   className?: string
 }
 
+const CHAR_WIDTH = 10.0
+
 const Paper = forwardRef<HTMLDivElement, PaperProps>(
   ({ lines, currentLineIndex, currentPosition, className }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          "relative w-full h-[500px] overflow-y-auto hide-scrollbar",
-          "bg-paper rounded-sm",
+          "relative w-full h-[260px] overflow-y-auto hide-scrollbar",
+          "rounded-sm paper-ruled-lines paper-margin-line paper-noise",
           className
         )}
         style={{
-          boxShadow: 'inset 0 0 30px rgba(0,0,0,0.03)'
+          background: '#f0e8d0',
+          boxShadow:
+            '0 0 40px rgba(0,0,0,0.8), 0 0 80px rgba(0,0,0,0.4), inset 0 0 60px rgba(0,0,0,0.03)',
         }}
       >
-        {/* Paper texture overlay */}
-        <div className="absolute inset-0 paper-texture pointer-events-none opacity-50" />
-        
-        {/* Paper content */}
-        <div className="relative p-8 pt-12">
-          {/* Typed lines */}
+        {/* Paper content — left padding clears the margin line */}
+        <div className="relative pt-[28px]" style={{ paddingLeft: '72px', paddingRight: '24px' }}>
           {lines.map((line, index) => (
             <div
               key={line.id}
-              className="relative h-6 leading-6"
+              className="relative"
+              style={{ height: '28px', lineHeight: '28px' }}
             >
               <span
-                className={cn(
-                  "typewriter-text text-[15px] whitespace-pre",
-                  line.color === 'black' ? 'text-ink-black' : 'text-ink-red'
-                )}
+                className="typewriter-text whitespace-pre"
+                style={{
+                  fontSize: '16px',
+                  color: line.color === 'black' ? '#1a0f08' : '#a03020',
+                }}
               >
                 {line.content}
               </span>
-              
-              {/* Cursor on current line */}
+
               {index === currentLineIndex && (
                 <span
-                  className="absolute top-0 h-5 w-[2px] bg-ink-black animate-pulse"
+                  className="absolute top-[4px] w-[2px] animate-pulse"
                   style={{
-                    left: `${currentPosition * 9.6}px`,
-                    animationDuration: '1s'
+                    height: '20px',
+                    left: `${currentPosition * CHAR_WIDTH}px`,
+                    animationDuration: '1s',
+                    background: '#c8902a',
                   }}
                 />
               )}
             </div>
           ))}
-          
-          {/* Extra space at bottom for scrolling */}
+
           <div className="h-64" />
         </div>
 
-        {/* Paper edge shadow */}
-        <div 
+        {/* Bottom fade to paper color */}
+        <div
           className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
           style={{
-            background: 'linear-gradient(to top, rgba(245,243,237,1), transparent)'
+            background: 'linear-gradient(to top, #f0e8d0, transparent)',
+            zIndex: 3,
           }}
         />
       </div>

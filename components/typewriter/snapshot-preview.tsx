@@ -32,13 +32,15 @@ export function SnapshotPreview({ snapshot, onClick, className }: SnapshotPrevie
       onClick={onClick}
       className={cn(
         "block w-full text-left p-3",
-        "bg-paper border border-paper-shadow/40 rounded-sm",
-        "hover:border-foreground/20 hover:shadow-md transition-all",
+        "rounded-sm",
+        "hover:shadow-md transition-all",
         "group cursor-pointer",
         className
       )}
       style={{
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        background: '#f0e8d0',
+        border: '1px solid rgba(0,0,0,0.08)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
       }}
     >
       {/* Mini paper preview */}
@@ -46,10 +48,8 @@ export function SnapshotPreview({ snapshot, onClick, className }: SnapshotPrevie
         {previewLines.map((line, index) => (
           <p
             key={line.id}
-            className={cn(
-              "typewriter-text text-[6px] leading-tight truncate",
-              line.color === 'black' ? 'text-ink-black' : 'text-ink-red'
-            )}
+            className="typewriter-text text-[6px] leading-tight truncate"
+            style={{ color: line.color === 'black' ? '#1a0f08' : '#a03020' }}
           >
             {line.content || '\u00A0'}
           </p>
@@ -57,7 +57,7 @@ export function SnapshotPreview({ snapshot, onClick, className }: SnapshotPrevie
       </div>
       
       {/* Timestamp */}
-      <p className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
+      <p className="text-[10px] transition-colors" style={{ color: '#a09070' }}>
         {formatTime(snapshot.timestamp)}
       </p>
     </button>

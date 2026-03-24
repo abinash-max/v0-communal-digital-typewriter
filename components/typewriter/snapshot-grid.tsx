@@ -36,17 +36,17 @@ export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProp
   }
 
   return (
-    <div className={cn("min-h-[70vh] w-full flex flex-col bg-background", className)}>
-      {/* Header */}
+    <div className={cn("min-h-[70vh] w-full flex flex-col", className)} style={{ background: 'transparent' }}>
       <div className="p-4 flex items-center justify-between">
         <button
           type="button"
           onClick={onClose}
-          className="font-serif text-sm text-foreground hover:text-muted-foreground transition-colors italic underline underline-offset-2"
+          className="font-serif text-sm transition-colors italic underline underline-offset-2"
+          style={{ color: '#e8d5b0' }}
         >
           snapshots &gt;
         </button>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs" style={{ color: '#a09070' }}>
           {snapshots.length} saved
         </span>
       </div>
@@ -61,8 +61,8 @@ export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProp
               key={snapshot.id}
               className={cn(
                 "absolute w-36 md:w-44 aspect-[3/4]",
-                "bg-paper border border-paper-shadow/30 rounded-sm",
-                "shadow-lg hover:shadow-xl transition-shadow cursor-pointer",
+                "rounded-sm",
+                "hover:shadow-xl transition-shadow cursor-pointer",
                 config.animation
               )}
               style={{
@@ -71,7 +71,9 @@ export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProp
                 zIndex: config.zIndex,
                 ['--rotation' as string]: `${config.rotate}deg`,
                 animationDelay: config.delay,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)',
+                background: '#f0e8d0',
+                border: '1px solid rgba(0,0,0,0.08)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 30px rgba(0,0,0,0.2)',
               }}
             >
               {/* Paper content */}
@@ -79,10 +81,8 @@ export function SnapshotGrid({ snapshots, onClose, className }: SnapshotGridProp
                 {snapshot.lines.slice(0, 12).map((line) => (
                   <p
                     key={line.id}
-                    className={cn(
-                      "typewriter-text text-[7px] md:text-[8px] leading-[1.5] truncate",
-                      line.color === 'black' ? 'text-ink-black' : 'text-ink-red'
-                    )}
+                    className="typewriter-text text-[7px] md:text-[8px] leading-[1.5] truncate"
+                    style={{ color: line.color === 'black' ? '#1a0f08' : '#a03020' }}
                   >
                     {line.content || '\u00A0'}
                   </p>

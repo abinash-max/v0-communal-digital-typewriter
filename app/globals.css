@@ -4,48 +4,48 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Vintage typewriter palette - warm cream paper, deep ink colors */
-  --background: oklch(0.95 0.01 85); /* warm cream background */
-  --foreground: oklch(0.18 0.02 50); /* deep brown-black ink */
-  --card: oklch(0.97 0.008 85); /* off-white paper */
-  --card-foreground: oklch(0.18 0.02 50);
-  --popover: oklch(0.97 0.008 85);
-  --popover-foreground: oklch(0.18 0.02 50);
-  --primary: oklch(0.25 0.03 45); /* dark brown-black */
-  --primary-foreground: oklch(0.97 0.008 85);
-  --secondary: oklch(0.92 0.015 85); /* lighter cream */
-  --secondary-foreground: oklch(0.25 0.03 45);
-  --muted: oklch(0.88 0.02 85); /* muted cream */
-  --muted-foreground: oklch(0.45 0.03 50); /* faded ink */
-  --accent: oklch(0.48 0.12 25); /* muted red for ink ribbon */
-  --accent-foreground: oklch(0.97 0.008 85);
-  --destructive: oklch(0.48 0.15 25);
-  --destructive-foreground: oklch(0.97 0.008 85);
-  --border: oklch(0.82 0.02 80);
-  --input: oklch(0.90 0.015 85);
-  --ring: oklch(0.45 0.03 50);
+  /* Dark cosmic typewriter palette */
+  --background: #08080f;
+  --foreground: #e8d5b0;
+  --card: #0d0d1a;
+  --card-foreground: #e8d5b0;
+  --popover: #0d0d1a;
+  --popover-foreground: #e8d5b0;
+  --primary: #e8d5b0;
+  --primary-foreground: #08080f;
+  --secondary: #12121f;
+  --secondary-foreground: #e8d5b0;
+  --muted: #14142a;
+  --muted-foreground: #a09070;
+  --accent: #c8902a;
+  --accent-foreground: #08080f;
+  --destructive: #8b2020;
+  --destructive-foreground: #e8d5b0;
+  --border: rgba(200,144,42,0.15);
+  --input: #12121f;
+  --ring: rgba(200,144,42,0.3);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.25rem;
-  --sidebar: oklch(0.93 0.012 85);
-  --sidebar-foreground: oklch(0.18 0.02 50);
-  --sidebar-primary: oklch(0.25 0.03 45);
-  --sidebar-primary-foreground: oklch(0.97 0.008 85);
-  --sidebar-accent: oklch(0.90 0.015 85);
-  --sidebar-accent-foreground: oklch(0.25 0.03 45);
-  --sidebar-border: oklch(0.85 0.02 80);
-  --sidebar-ring: oklch(0.45 0.03 50);
+  --sidebar: #0d0d1a;
+  --sidebar-foreground: #a09070;
+  --sidebar-primary: #e8d5b0;
+  --sidebar-primary-foreground: #08080f;
+  --sidebar-accent: #14142a;
+  --sidebar-accent-foreground: #e8d5b0;
+  --sidebar-border: rgba(200,144,42,0.15);
+  --sidebar-ring: rgba(200,144,42,0.3);
   
   /* Custom typewriter colors */
-  --paper: oklch(0.975 0.006 90);
-  --paper-shadow: oklch(0.85 0.02 80);
-  --ink-black: oklch(0.15 0.02 50);
-  --ink-red: oklch(0.45 0.18 25);
-  --typewriter-body: oklch(0.35 0.04 60);
-  --typewriter-metal: oklch(0.55 0.02 70);
+  --paper: #f0e8d0;
+  --paper-shadow: rgba(0,0,0,0.15);
+  --ink-black: #1a0f08;
+  --ink-red: #a03020;
+  --typewriter-body: #1a1a2e;
+  --typewriter-metal: #3a3a5c;
 }
 
 .dark {
@@ -148,10 +148,41 @@
   letter-spacing: 0.02em;
 }
 
-.paper-texture {
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
-  background-size: 100% 1.5rem;
+/* Ruled lines on paper — 28px spacing to match line-height */
+.paper-ruled-lines {
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 27px,
+      rgba(0,0,0,0.06) 27px,
+      rgba(0,0,0,0.06) 28px
+    );
+  background-position: 0 0;
+}
+
+/* Left margin line */
+.paper-margin-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 60px;
+  width: 1px;
+  background: rgba(200,80,80,0.3);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Subtle paper noise texture via inline SVG feTurbulence */
+.paper-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: multiply;
 }
 
 /* Hide scrollbar for paper scrolling */
@@ -274,4 +305,41 @@
 
 .hand-drawn-wobble {
   animation: wobble 3s ease-in-out infinite;
+}
+
+/* 3D key press effect */
+.typewriter-key {
+  box-shadow: 0 4px 0 rgba(200,144,42,0.3);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+.typewriter-key.key-pressed {
+  transform: translateY(3px) scale(0.93);
+  box-shadow: 0 1px 0 rgba(200,144,42,0.3);
+}
+
+.typewriter-key-space {
+  box-shadow: 0 4px 0 rgba(200,144,42,0.25);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+.typewriter-key-space.key-pressed {
+  transform: translateY(3px) scale(0.96);
+  box-shadow: 0 1px 0 rgba(200,144,42,0.25);
+}
+
+/* Amber flash on paper when a key is struck */
+@keyframes amber-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.amber-flash {
+  animation: amber-flash 0.2s ease-out forwards;
+}
+
+/* Starfield pulse animation */
+@keyframes star-pulse {
+  0%, 100% { opacity: var(--star-min-opacity, 0.2); }
+  50% { opacity: var(--star-max-opacity, 0.8); }
 }
