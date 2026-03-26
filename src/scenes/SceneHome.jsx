@@ -243,10 +243,12 @@ export default function SceneHome({ onContinue }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "flex-end",
           padding: "clamp(24px, 5vw, 56px)",
           paddingLeft: "clamp(28px, 6vw, 64px)",
-          paddingTop: "clamp(300px, 45vh, 530px)",
+          // Bottom-align the content so the solar system stays visible.
+          paddingTop: "clamp(18px, 3vh, 28px)",
+          paddingBottom: "clamp(22px, 7vh, 64px)",
           position: "relative",
           zIndex: 5,
         }}
@@ -257,11 +259,11 @@ export default function SceneHome({ onContinue }) {
           transition={{ delay: 0.15, duration: 0.65 }}
           className="font-serif text-balance text-center"
           style={{
-            fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
+            fontSize: "clamp(1.35rem, 3.4vw, 2.1rem)",
             fontWeight: 400,
             color: "#e8d5b0",
-            margin: "0 0 28px",
-            maxWidth: "22ch",
+            margin: "0 0 18px",
+            maxWidth: "20ch",
             lineHeight: 1.25,
           }}
         >
@@ -275,7 +277,7 @@ export default function SceneHome({ onContinue }) {
           transition={{ delay: 0.4, duration: 0.7 }}
           style={{
             width: "100%",
-            maxWidth: 440,
+            maxWidth: 380,
             backgroundColor: "#f0e8d8",
             backgroundImage:
               "repeating-linear-gradient(transparent, transparent 27px, rgba(160,140,100,0.22) 27px, rgba(160,140,100,0.22) 28px)",
@@ -283,7 +285,7 @@ export default function SceneHome({ onContinue }) {
             boxShadow:
               "0 4px 0 rgba(26,26,42,0.4), 0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.35)",
             border: "1px solid rgba(42,38,32,0.12)",
-            padding: "28px 28px 32px 40px",
+            padding: "18px 18px 20px 30px",
             position: "relative",
           }}
         >
@@ -301,8 +303,8 @@ export default function SceneHome({ onContinue }) {
           <p
             style={{
               fontFamily: "'Courier Prime', 'Courier New', monospace",
-              fontSize: 14,
-              lineHeight: "28px",
+              fontSize: 12,
+              lineHeight: "22px",
               color: "#2a1a08",
               margin: 0,
             }}
@@ -325,7 +327,7 @@ export default function SceneHome({ onContinue }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.75, duration: 0.5 }}
-          style={{ marginTop: 36 }}
+          style={{ marginTop: 22 }}
         >
           <button
             type="button"

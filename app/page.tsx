@@ -71,6 +71,7 @@ export default function Home() {
 
   const [snapshots, setSnapshots] = useState<Snapshot[]>([])
   const [showSnapshotGrid, setShowSnapshotGrid] = useState(false)
+  const [showSnapshotsPanel, setShowSnapshotsPanel] = useState(false)
   const [wordEvent, setWordEvent] = useState({ word: '', id: 0 })
   const [wordHistory, setWordHistory] = useState<string[]>([])
   const [paperOpen, setPaperOpen] = useState(false)
@@ -90,6 +91,7 @@ export default function Home() {
 
   const handleSnapshot = useCallback((snapshot: Snapshot) => {
     setSnapshots(prev => [snapshot, ...prev])
+    setShowSnapshotsPanel(true)
   }, [])
 
   const handleWord = useCallback((word: string) => {
@@ -103,6 +105,10 @@ export default function Home() {
 
   const handleCloseSnapshotGrid = useCallback(() => {
     setShowSnapshotGrid(false)
+  }, [])
+
+  const handleCloseSnapshotsPanel = useCallback(() => {
+    setShowSnapshotsPanel(false)
   }, [])
 
   useEffect(() => {
@@ -381,6 +387,81 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
+                {/* Snapshots sidebar (auto-opens after snapshot) */}
+                <AnimatePresence>
+                  {!showSnapshotGrid && showSnapshotsPanel && (
+                    <motion.aside
+                      initial={{ opacity: 0, x: -40 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -40 }}
+                      transition={{ duration: 0.35, ease: 'easeOut' }}
+                      style={{
+                        position: 'fixed',
+                        left: 14,
+                        top: 14,
+                        bottom: 14,
+                        width: 'min(320px, calc(100vw - 28px))',
+                        maxWidth: 320,
+                        zIndex: 30,
+                        background: 'rgba(3,3,8,0.62)',
+                        border: '1px solid rgba(200,144,42,0.18)',
+                        borderRadius: 14,
+                        boxShadow: '0 18px 60px rgba(0,0,0,0.55)',
+                        backdropFilter: 'blur(10px)',
+                        padding: 12,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: 10,
+                          gap: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontFamily: "'Courier Prime', 'Courier New', monospace",
+                            fontSize: 11,
+                            letterSpacing: 3,
+                            textTransform: 'uppercase',
+                            color: 'rgba(232,213,176,0.75)',
+                          }}
+                        >
+                          saved snapshots
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCloseSnapshotsPanel}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'rgba(232,213,176,0.7)',
+                            cursor: 'pointer',
+                            fontFamily: "'Courier Prime', 'Courier New', monospace",
+                            fontSize: 12,
+                            opacity: 0.85,
+                          }}
+                        >
+                          close
+                        </button>
+                      </div>
+
+                      <div style={{ overflowY: 'auto', height: '100%', paddingRight: 6 }}>
+                        <SnapshotStack
+                          snapshots={snapshots}
+                          onViewAll={() => {
+                            setShowSnapshotGrid(true)
+                            setShowSnapshotsPanel(false)
+                          }}
+                        />
+                      </div>
+                    </motion.aside>
+                  )}
+                </AnimatePresence>
               </div>
 
               <footer className="fixed bottom-4 left-1/2 -translate-x-1/2" style={{ zIndex: 1 }}>

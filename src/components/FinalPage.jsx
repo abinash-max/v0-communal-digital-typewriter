@@ -392,12 +392,12 @@ function EnglishStickyNotes({ lines }) {
 
   if (notes.length === 0) return null
 
-  // Fixed positions around center, leaving the BirthdayMessage area clear.
+  // Anchor to corners so smaller screens don't push notes over the center text.
   const positions = [
-    { left: "10%", top: "18%" },
-    { left: "66%", top: "18%" },
-    { left: "10%", top: "62%" },
-    { left: "66%", top: "62%" },
+    { left: "clamp(10px, 5vw, 56px)", top: "clamp(10px, 7vh, 64px)" },
+    { right: "clamp(10px, 5vw, 56px)", top: "clamp(10px, 7vh, 64px)" },
+    { left: "clamp(10px, 5vw, 56px)", bottom: "clamp(96px, 16vh, 170px)" },
+    { right: "clamp(10px, 5vw, 56px)", bottom: "clamp(96px, 16vh, 170px)" },
   ]
 
   return (
@@ -416,9 +416,11 @@ function EnglishStickyNotes({ lines }) {
           data-en-note
           style={{
             position: "absolute",
-            left: positions[i]?.left ?? "10%",
-            top: positions[i]?.top ?? "18%",
-            width: "min(340px, 34vw)",
+            left: positions[i]?.left,
+            right: positions[i]?.right,
+            top: positions[i]?.top,
+            bottom: positions[i]?.bottom,
+            width: "clamp(220px, 30vw, 340px)",
             minHeight: 150,
             background: n.palette.bg,
             color: n.palette.color,
@@ -462,25 +464,33 @@ function EnglishStickyNotes({ lines }) {
 }
 
 function useSavedEnglishNotes() {
-  const KEY = "saved-english-sticky-notes-v1"
+  const KEY = "saved-english-sticky-notes-v2"
 
-  const readAll = () => {
+  const readOne = () => {
     try {
       const raw = localStorage.getItem(KEY)
-      const parsed = raw ? JSON.parse(raw) : []
-      return Array.isArray(parsed) ? parsed : []
+      const parsed = raw ? JSON.parse(raw) : null
+      if (!parsed || typeof parsed !== "object") return null
+      if (!Array.isArray(parsed.lines)) return null
+      return parsed
     } catch {
-      return []
+      return null
     }
   }
 
-  const writeAll = (arr) => {
+  const writeOne = (entry) => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(arr))
+      localStorage.setItem(KEY, JSON.stringify(entry))
     } catch {}
   }
 
-  return { KEY, readAll, writeAll }
+  const clear = () => {
+    try {
+      localStorage.removeItem(KEY)
+    } catch {}
+  }
+
+  return { KEY, readOne, writeOne, clear }
 }
 
 /** @param {FinalPageProps} props */
@@ -502,46 +512,44 @@ export default function FinalPage(props) {
     [resolvedSentencePacks]
   )
 
-  const { readAll, writeAll } = useSavedEnglishNotes()
-  const [savedOpen, setSavedOpen] = useState(false)
-  const [saved, setSaved] = useState([])
+  const { readOne, writeOne, clear } = useSavedEnglishNotes()
   const [activeLines, setActiveLines] = useState([])
-
-  useEffect(() => {
-    setSaved(readAll())
-  }, [])
+  const [saveFlash, setSaveFlash] = useState(false)
+  const [savedOpen, setSavedOpen] = useState(false)
+  const [savedEntry, setSavedEntry] = useState(null)
 
   useEffect(() => {
     if (hasSentenceNotes) setActiveLines(englishLinesFromPacks)
   }, [hasSentenceNotes, englishLinesFromPacks])
 
+  const refreshSaved = useCallback(() => {
+    setSavedEntry(readOne())
+  }, [readOne])
+
+  useEffect(() => {
+    if (savedOpen) refreshSaved()
+  }, [savedOpen, refreshSaved])
+
   const handleSave = useCallback(() => {
     const lines = activeLines.length > 0 ? activeLines : englishLinesFromPacks
-    if (!lines || lines.length === 0) return
+    if (!lines || lines.length < 4) return
 
     const entry = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       createdAt: new Date().toISOString(),
       lines: lines.slice(0, 4),
     }
 
-    const next = [entry, ...readAll()]
-    writeAll(next)
-    setSaved(next)
+    writeOne(entry)
+    setSaveFlash(true)
+    window.setTimeout(() => setSaveFlash(false), 1400)
     setSavedOpen(true)
-  }, [activeLines, englishLinesFromPacks, readAll, writeAll])
+    setSavedEntry(entry)
+  }, [activeLines, englishLinesFromPacks, writeOne])
 
-  const handleDeleteSaved = useCallback(
-    (id) => {
-      const next = readAll().filter((e) => e?.id !== id)
-      writeAll(next)
-      setSaved(next)
-      if (activeLines?.length && saved.find((e) => e?.id === id)) {
-        setActiveLines(englishLinesFromPacks)
-      }
-    },
-    [readAll, writeAll, activeLines, saved, englishLinesFromPacks]
-  )
+  const handleDeleteSaved = useCallback(() => {
+    clear()
+    setSavedEntry(null)
+  }, [clear])
 
   const [constellationData, setConstellationData] = useState(
     constellationAnimationData ?? null
@@ -659,7 +667,7 @@ export default function FinalPage(props) {
             padding: "8px 12px",
           }}
         >
-          save notes
+          save
         </button>
 
         <button
@@ -677,8 +685,27 @@ export default function FinalPage(props) {
             padding: "8px 12px",
           }}
         >
-          saved ({saved.length})
+          saved
         </button>
+
+        {saveFlash && (
+          <span
+            style={{
+              fontFamily: "'Courier Prime', 'Courier New', monospace",
+              fontSize: 11,
+              color: "rgba(232,213,176,0.75)",
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              padding: "8px 10px",
+              borderRadius: 999,
+              border: "1px solid rgba(200,144,42,0.18)",
+              background: "rgba(3,3,8,0.55)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+            }}
+          >
+            saved
+          </span>
+        )}
 
         <button
           type="button"
@@ -720,7 +747,7 @@ export default function FinalPage(props) {
           style={{
             position: "absolute",
             left: "50%",
-            top: 18,
+            top: 16,
             transform: "translateX(-50%)",
             width: "min(980px, 94vw)",
             zIndex: 6,
@@ -769,7 +796,7 @@ export default function FinalPage(props) {
             </button>
           </div>
 
-          {saved.length === 0 ? (
+          {!savedEntry ? (
             <div
               style={{
                 color: "rgba(232,213,176,0.55)",
@@ -780,97 +807,89 @@ export default function FinalPage(props) {
               nothing saved yet
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: 10,
-                maxHeight: "34vh",
-                overflow: "auto",
-                paddingRight: 4,
-              }}
-            >
-              {saved.map((e) => (
+            <>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  marginBottom: 10,
+                }}
+              >
                 <div
-                  key={e.id}
                   style={{
-                    border: "1px solid rgba(200,144,42,0.14)",
-                    borderRadius: 12,
-                    padding: 10,
-                    background: "rgba(10,10,18,0.55)",
+                    color: "rgba(232,213,176,0.75)",
+                    fontFamily: "'Courier Prime', 'Courier New', monospace",
+                    fontSize: 11,
                   }}
                 >
-                  <div
+                  {savedEntry.createdAt ? new Date(savedEntry.createdAt).toLocaleString() : "saved"}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLines(savedEntry.lines ?? [])}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 10,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "rgba(232,213,176,0.75)",
-                        fontFamily: "'Courier Prime', 'Courier New', monospace",
-                        fontSize: 11,
-                      }}
-                    >
-                      {new Date(e.createdAt).toLocaleString()}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveLines(e.lines ?? [])}
-                      style={{
-                        background: "none",
-                        border: "1px solid rgba(200,144,42,0.22)",
-                        color: "rgba(232,213,176,0.75)",
-                        borderRadius: 999,
-                        padding: "5px 10px",
-                        cursor: "pointer",
-                        fontFamily: "'Courier Prime', 'Courier New', monospace",
-                        fontSize: 11,
-                      }}
-                    >
-                      load
-                    </button>
-                  </div>
-
-                  <div
-                    style={{
-                      color: "rgba(232,213,176,0.65)",
+                      background: "none",
+                      border: "1px solid rgba(200,144,42,0.22)",
+                      color: "rgba(232,213,176,0.75)",
+                      borderRadius: 999,
+                      padding: "5px 10px",
+                      cursor: "pointer",
                       fontFamily: "'Courier Prime', 'Courier New', monospace",
                       fontSize: 11,
-                      lineHeight: 1.45,
-                      maxHeight: 86,
+                    }}
+                  >
+                    load
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteSaved}
+                    style={{
+                      background: "none",
+                      border: "1px solid rgba(200,80,80,0.25)",
+                      color: "rgba(255,210,210,0.75)",
+                      borderRadius: 999,
+                      padding: "5px 10px",
+                      cursor: "pointer",
+                      fontFamily: "'Courier Prime', 'Courier New', monospace",
+                      fontSize: 11,
+                    }}
+                  >
+                    delete
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gap: 10,
+                }}
+              >
+                {(savedEntry.lines ?? []).slice(0, 4).map((t, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      border: "1px solid rgba(200,144,42,0.14)",
+                      borderRadius: 12,
+                      padding: 10,
+                      background: "rgba(10,10,18,0.55)",
+                      color: "rgba(232,213,176,0.75)",
+                      fontFamily: "'Courier Prime', 'Courier New', monospace",
+                      fontSize: 11,
+                      lineHeight: 1.5,
+                      minHeight: 92,
                       overflow: "hidden",
                     }}
                   >
-                    {(e.lines?.[0] ?? "").slice(0, 140)}
-                    {(e.lines?.[0] ?? "").length > 140 ? "…" : ""}
+                    {idx + 1}. {t}
                   </div>
-
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSaved(e.id)}
-                      style={{
-                        background: "none",
-                        border: "1px solid rgba(200,80,80,0.25)",
-                        color: "rgba(255,210,210,0.75)",
-                        borderRadius: 999,
-                        padding: "6px 10px",
-                        cursor: "pointer",
-                        fontFamily: "'Courier Prime', 'Courier New', monospace",
-                        fontSize: 11,
-                      }}
-                    >
-                      delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
