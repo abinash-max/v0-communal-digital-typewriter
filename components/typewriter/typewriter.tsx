@@ -95,6 +95,7 @@ interface TypewriterProps {
   onGirlfriendTyping?: (typing: boolean) => void
   onKeyHit?: (key: string) => void
   onGirlfriendComplete?: () => void
+  onFocusChange?: (focused: boolean) => void
   smokeAnimationPath?: string
   dustAnimationPath?: string
   smokeAnimationData?: Record<string, unknown>
@@ -115,6 +116,7 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
     onGirlfriendTyping,
     onKeyHit,
     onGirlfriendComplete,
+    onFocusChange,
     smokeAnimationPath,
     dustAnimationPath,
     smokeAnimationData,
@@ -161,11 +163,13 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
   const typingCbRef = useRef(onGirlfriendTyping)
   const keyHitCbRef = useRef(onKeyHit)
   const girlfriendCompleteCbRef = useRef(onGirlfriendComplete)
+  const focusCbRef = useRef(onFocusChange)
   stickyCbRef.current = onGirlfriendSticky
   lineCbRef.current = onGirlfriendLine
   typingCbRef.current = onGirlfriendTyping
   keyHitCbRef.current = onKeyHit
   girlfriendCompleteCbRef.current = onGirlfriendComplete
+  focusCbRef.current = onFocusChange
 
   useEffect(() => {
     if (paperOpen) return
@@ -364,8 +368,14 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
       ref={containerRef}
       tabIndex={0}
       onClick={handleContainerClick}
-      onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
+      onFocus={() => {
+        setIsFocused(true)
+        focusCbRef.current?.(true)
+      }}
+      onBlur={() => {
+        setIsFocused(false)
+        focusCbRef.current?.(false)
+      }}
       className={cn(
         'relative mx-auto min-h-0 w-full max-w-3xl outline-none',
         'focus:ring-0',

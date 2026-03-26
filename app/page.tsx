@@ -82,6 +82,7 @@ export default function Home() {
   const [girlFollowPos, setGirlFollowPos] = useState<{ top: number; left: number } | null>(null)
   const [lastKeyHit, setLastKeyHit] = useState<string | null>(null)
   const [completedSentencePacks, setCompletedSentencePacks] = useState<GirlfriendSentencePack[]>([])
+  const [isTypewriterFocused, setIsTypewriterFocused] = useState(false)
 
   const typewriterAreaRef = useRef<HTMLDivElement>(null)
   const typewriterRef = useRef<TypewriterRef>(null)
@@ -161,9 +162,11 @@ export default function Home() {
     }
   }, [scene])
 
+  const followKeysActive = scene === 'typewriter' && (paperOpen || isTypewriterFocused)
+
   useEffect(() => {
     if (scene !== 'typewriter') return
-    if (!paperOpen) {
+    if (!followKeysActive) {
       setGirlFollowPos(null)
       return
     }
@@ -188,7 +191,7 @@ export default function Home() {
       top: Math.max(20, y - 70),
       left: Math.min(window.innerWidth - 40, x + 18),
     })
-  }, [scene, paperOpen, lastKeyHit])
+  }, [scene, followKeysActive, lastKeyHit])
 
   return (
     <main className="min-h-screen bg-background relative">
@@ -260,7 +263,7 @@ export default function Home() {
               layoutId="female-lottie"
               initial={false}
               animate={
-                paperOpen
+                followKeysActive
                   ? {
                       top: girlFollowPos ? `${girlFollowPos.top}px` : 'calc(12% - 82px)',
                       left: girlFollowPos ? `${girlFollowPos.left}px` : 'auto',
@@ -294,7 +297,7 @@ export default function Home() {
                 queueMicrotask(() => typewriterRef.current?.startGirlfriendFlow())
               }}
               className="female-lottie-wrap"
-              data-follow={paperOpen ? 'true' : 'false'}
+              data-follow={followKeysActive ? 'true' : 'false'}
               style={{
                 position: 'fixed',
                 zIndex: paperOpen ? 25 : 20,
@@ -374,6 +377,7 @@ export default function Home() {
                         onWord={handleWord}
                         isArriving={isArriving}
                         onKeyHit={(key) => setLastKeyHit(key)}
+                        onFocusChange={(focused) => setIsTypewriterFocused(focused)}
                         onGirlfriendSticky={(pack) => {
                           setSentencePack(pack)
                           if (pack) setSentenceTrigger((t) => t + 1)
