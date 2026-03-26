@@ -95,7 +95,8 @@ interface TypewriterProps {
   onGirlfriendTyping?: (typing: boolean) => void
   onKeyHit?: (key: string) => void
   onGirlfriendComplete?: () => void
-  onFocusChange?: (focused: boolean) => void
+  onActivate?: () => void
+  allowManualTyping?: boolean
   smokeAnimationPath?: string
   dustAnimationPath?: string
   smokeAnimationData?: Record<string, unknown>
@@ -116,7 +117,8 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
     onGirlfriendTyping,
     onKeyHit,
     onGirlfriendComplete,
-    onFocusChange,
+    onActivate,
+    allowManualTyping = false,
     smokeAnimationPath,
     dustAnimationPath,
     smokeAnimationData,
@@ -163,13 +165,13 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
   const typingCbRef = useRef(onGirlfriendTyping)
   const keyHitCbRef = useRef(onKeyHit)
   const girlfriendCompleteCbRef = useRef(onGirlfriendComplete)
-  const focusCbRef = useRef(onFocusChange)
+  const activateCbRef = useRef(onActivate)
   stickyCbRef.current = onGirlfriendSticky
   lineCbRef.current = onGirlfriendLine
   typingCbRef.current = onGirlfriendTyping
   keyHitCbRef.current = onKeyHit
   girlfriendCompleteCbRef.current = onGirlfriendComplete
-  focusCbRef.current = onFocusChange
+  activateCbRef.current = onActivate
 
   useEffect(() => {
     if (paperOpen) return
@@ -218,6 +220,7 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+    if (!allowManualTyping) return
 
     const flushWord = () => {
       const word = currentWordRef.current
@@ -250,9 +253,10 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
     return () => {
       container.removeEventListener('keydown', onKeyDown)
     }
-  }, [handleKeyDown])
+  }, [handleKeyDown, allowManualTyping])
 
   const handleContainerClick = useCallback(() => {
+    activateCbRef.current?.()
     containerRef.current?.focus({ preventScroll: true })
     scrollToCurrentLine()
   }, [scrollToCurrentLine])
@@ -276,6 +280,7 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+    if (!allowManualTyping) return
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
@@ -290,7 +295,7 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
 
     container.addEventListener('keydown', onKeyDown)
     return () => container.removeEventListener('keydown', onKeyDown)
-  }, [carriageReturn])
+  }, [carriageReturn, allowManualTyping])
 
   const runAutoTyping = useCallback(async () => {
     const typeSentence = async (sentence: GirlfriendSentencePack, index: number) => {
@@ -370,11 +375,9 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
       onClick={handleContainerClick}
       onFocus={() => {
         setIsFocused(true)
-        focusCbRef.current?.(true)
       }}
       onBlur={() => {
         setIsFocused(false)
-        focusCbRef.current?.(false)
       }}
       className={cn(
         'relative mx-auto min-h-0 w-full max-w-3xl outline-none',
@@ -493,10 +496,10 @@ export const Typewriter = forwardRef<TypewriterRef, TypewriterProps>(function Ty
           <div className="relative">
             <TypewriterKeyboard pressedKey={displayedKey} />
           
-            {!isFocused && !isAutoTyping && (
+            {!isAutoTyping && (
               <div className="absolute inset-0 flex items-center justify-center rounded-xl z-10" style={{ background: 'rgba(8,8,15,0.6)', backdropFilter: 'blur(2px)' }}>
                 <p className="text-sm px-4 py-2 rounded-full" style={{ color: '#a09070', background: 'rgba(8,8,15,0.8)' }}>
-                  Click to start typing
+                  Click to begin
                 </p>
               </div>
             )}

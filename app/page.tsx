@@ -82,7 +82,6 @@ export default function Home() {
   const [girlFollowPos, setGirlFollowPos] = useState<{ top: number; left: number } | null>(null)
   const [lastKeyHit, setLastKeyHit] = useState<string | null>(null)
   const [completedSentencePacks, setCompletedSentencePacks] = useState<GirlfriendSentencePack[]>([])
-  const [isTypewriterFocused, setIsTypewriterFocused] = useState(false)
 
   const typewriterAreaRef = useRef<HTMLDivElement>(null)
   const typewriterRef = useRef<TypewriterRef>(null)
@@ -162,7 +161,7 @@ export default function Home() {
     }
   }, [scene])
 
-  const followKeysActive = scene === 'typewriter' && (paperOpen || isTypewriterFocused)
+  const followKeysActive = scene === 'typewriter' && paperOpen
 
   useEffect(() => {
     if (scene !== 'typewriter') return
@@ -377,7 +376,12 @@ export default function Home() {
                         onWord={handleWord}
                         isArriving={isArriving}
                         onKeyHit={(key) => setLastKeyHit(key)}
-                        onFocusChange={(focused) => setIsTypewriterFocused(focused)}
+                        onActivate={() => {
+                          // Same automatic pipeline as clicking the girl.
+                          setPaperOpen(true)
+                          setSentencePack(null)
+                          queueMicrotask(() => typewriterRef.current?.startGirlfriendFlow())
+                        }}
                         onGirlfriendSticky={(pack) => {
                           setSentencePack(pack)
                           if (pack) setSentenceTrigger((t) => t + 1)
