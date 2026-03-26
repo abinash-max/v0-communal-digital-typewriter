@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import spaceBg from "../assets/videos/space.mp4"
 import Starfield from "../components/Starfield"
@@ -7,6 +8,13 @@ import StarfieldSideBands from "../components/StarfieldSideBands"
 import ShootingStars from "../components/ShootingStars"
 
 export default function SceneEntry({ onEnter }) {
+  const [startVideo, setStartVideo] = useState(false)
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setStartVideo(true), 1000)
+    return () => window.clearTimeout(t)
+  }, [])
+
   return (
     <div
       style={{
@@ -28,23 +36,25 @@ export default function SceneEntry({ onEnter }) {
             "radial-gradient(ellipse 90% 80% at 50% 45%, #0a0814 0%, #050508 100%)",
         }}
       />
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: "fixed",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      >
-        <source src={spaceBg} type="video/mp4" />
-      </video>
+      {startVideo && (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <source src={spaceBg} type="video/mp4" />
+        </video>
+      )}
 
       {/* Side pillars — strong purple toward edges + softer wash toward the video (center stays clear) */}
       <div
