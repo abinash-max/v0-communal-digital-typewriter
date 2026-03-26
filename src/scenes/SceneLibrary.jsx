@@ -6,10 +6,56 @@ import { motion } from "framer-motion"
 import { smokeData } from "../assets/lottie/index.js"
 
 const WORDS = [
-  "memory", "language", "نور", "meaning",
-  "言葉", "thought", "luz", "शब्द", "voice", "echo",
-  "रोशनी", "tiempo",
+  "California",
+  "Palo Alto",
+  "Extraordinary",
+  "Precious",
+  "Rare",
+  "Light",
+  "Divine",
+  "Surrender",
+  "Shabd",
+  "Voice",
+  "Eternal",
+  "Destined",
+  "Pure",
+  "Faith",
+  "Patience",
+  "दिल्ली",
+  "वसंत मार्ग",
+  "मसूरी",
+  "अनन्त",
+  "तेजस्वी",
+  "नक्षत्र",
+  "श्रद्धा",
+  "उदय",
+  "शाश्वत",
+  "روح",
+  "نور",
+  "روشنی",
+  "ستارہ",
+  "عظیم",
+  "خلوص",
+  "مبارک",
+  "جمال",
+  "قلب",
+  "كريم",
+  "光",
+  "星",
+  "魂",
+  "無限",
+  "命",
+  "恵み",
+  "美しい",
+  "Luz",
+  "Alma",
+  "Eterno",
+  "Estrella",
+  "Bendecido",
+  "Divino",
+  "Precioso",
 ]
+const SHLOKA_LINE = "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत"
 
 const WORD_LATIN = /^[a-zA-Z]+$/
 const BOOK_COLORS = [
@@ -44,18 +90,35 @@ function buildShelfRows() {
 }
 
 function buildWordMeta() {
-  return WORDS.map((w, i) => ({
-    isTopWord: i >= WORDS.length - 2,
-    text: w,
-    x: 18 + Math.random() * 57,
-    y: i >= WORDS.length - 2 ? 5 + Math.random() * 20 : 55 + Math.random() * 30,
-    size: 14 + Math.random() * 8,
-    opacity: 0.6 + Math.random() * 0.3,
-    duration: i >= WORDS.length - 2 ? 12 + Math.random() * 4 : 7 + Math.random() * 8,
-    delay: Math.random() * 10,
-    italic: WORD_LATIN.test(w),
-    id: i,
-  }))
+  const innerWidth = 64
+  const startX = 18
+  const topY = 26
+  const bottomY = 82
+  const count = WORDS.length
+  const cols = Math.ceil(Math.sqrt(count))
+  const rows = Math.ceil(count / cols)
+  const cellW = innerWidth / cols
+  const cellH = (bottomY - topY) / rows
+
+  return WORDS.map((w, i) => {
+    const row = Math.floor(i / cols)
+    const col = i % cols
+    const jitterX = (Math.random() - 0.5) * cellW * 0.32
+    const jitterY = (Math.random() - 0.5) * cellH * 0.3
+
+    return {
+      isTopWord: false,
+      text: w,
+      x: startX + cellW * (col + 0.5) + jitterX,
+      y: topY + cellH * (row + 0.5) + jitterY,
+      size: 16 + Math.random() * 8,
+      opacity: 0.64 + Math.random() * 0.24,
+      duration: 8 + Math.random() * 7,
+      delay: Math.random() * 8,
+      italic: WORD_LATIN.test(w),
+      id: i,
+    }
+  })
 }
 
 export default function SceneLibrary({ onEnter }) {
@@ -91,6 +154,34 @@ export default function SceneLibrary({ onEnter }) {
           boxShadow: "inset -30px 0 50px rgba(200,144,42,0.06)",
         }}
       />
+
+      <div
+        style={{
+          position: "absolute",
+          top: "11%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 4,
+          pointerEvents: "none",
+          width: "min(92vw, 920px)",
+          textAlign: "center",
+        }}
+      >
+        <p
+          className="scene-lib-shloka"
+          style={{
+            margin: 0,
+            fontFamily: "'Noto Serif Devanagari', 'Mangal', serif",
+            fontSize: "clamp(16px, 2.2vw, 24px)",
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            color: "rgba(230, 186, 96, 0.9)",
+            textShadow: "0 0 16px rgba(200,144,42,0.45)",
+          }}
+        >
+          {SHLOKA_LINE}
+        </p>
+      </div>
 
       {/* 2. Right bookshelf strip */}
       <div
@@ -324,7 +415,8 @@ export default function SceneLibrary({ onEnter }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-end",
+          paddingBottom: 48,
           cursor: "pointer",
         }}
       >
@@ -377,7 +469,7 @@ export default function SceneLibrary({ onEnter }) {
 
         .scene-lib-proceed {
           font-family: 'Courier Prime', 'Courier New', monospace;
-          font-size: 14px;
+          font-size: 19px;
           letter-spacing: 7px;
           color: rgba(200,144,42,0.95);
           font-weight: 500;
@@ -396,6 +488,29 @@ export default function SceneLibrary({ onEnter }) {
         @keyframes scene-lib-threshold {
           0%, 100% { opacity: 0.6; }
           50%      { opacity: 1; }
+        }
+        .scene-lib-shloka {
+          animation:
+            scene-lib-shloka-float 6.8s ease-in-out infinite,
+            scene-lib-shloka-glow 4.2s ease-in-out infinite;
+          will-change: transform, opacity, text-shadow;
+        }
+        @keyframes scene-lib-shloka-float {
+          0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.82; }
+          25% { transform: translate3d(8px, -11px, 0) scale(1.01); opacity: 0.92; }
+          50% { transform: translate3d(-7px, -20px, 0) scale(1.02); opacity: 1; }
+          75% { transform: translate3d(6px, -10px, 0) scale(1.01); opacity: 0.92; }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.82; }
+        }
+        @keyframes scene-lib-shloka-glow {
+          0%, 100% {
+            text-shadow: 0 0 12px rgba(200,144,42,0.28);
+          }
+          50% {
+            text-shadow:
+              0 0 18px rgba(200,144,42,0.5),
+              0 0 30px rgba(200,144,42,0.24);
+          }
         }
       `}</style>
     </motion.div>

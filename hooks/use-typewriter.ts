@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 export type InkColor = 'black' | 'red'
 
@@ -39,7 +39,11 @@ export function useTypewriter() {
   const [pressedKey, setPressedKey] = useState<string | null>(null)
   
   const paperRef = useRef<HTMLDivElement>(null)
-  const lineHeight = 28
+  const stateRef = useRef({ currentLineIndex: 0, currentPosition: 0, inkColor: 'black' as InkColor })
+
+  useEffect(() => {
+    stateRef.current = { currentLineIndex, currentPosition, inkColor }
+  }, [currentLineIndex, currentPosition, inkColor])
 
   // Calculate carriage offset based on current typing position
   const carriageOffset = currentPosition * CHAR_WIDTH
@@ -123,27 +127,61 @@ export function useTypewriter() {
       setCurrentLineIndex(prev => prev + 1)
       setCurrentPosition(0)
       setIsCarriageReturning(false)
-      
-      // Scroll paper to show current line
-      if (paperRef.current) {
-        const scrollTarget = (currentLineIndex + 1) * lineHeight - 200
-        paperRef.current.scrollTo({
-          top: Math.max(0, scrollTarget),
-          behavior: 'smooth'
-        })
-      }
     }, 300)
   }, [currentLineIndex, inkColor, isCarriageReturning])
 
-  const scrollToCurrentLine = useCallback(() => {
-    if (paperRef.current) {
-      const scrollTarget = currentLineIndex * lineHeight - 200
-      paperRef.current.scrollTo({
-        top: Math.max(0, scrollTarget),
-        behavior: 'smooth'
+  const injectCharacter = useCallback((char: string) => {
+    if (char.length !== 1) return
+    setPressedKey(char === ' ' ? ' ' : char)
+    setTimeout(() => setPressedKey(null), 120)
+
+    const { currentLineIndex: lineIdx, currentPosition: pos, inkColor: ink } = stateRef.current
+    if (pos >= CHARS_PER_LINE) return
+
+    if (char === ' ') {
+      setLines(prev => {
+        const next = [...prev]
+        const line = next[lineIdx]
+        next[lineIdx] = { ...line, content: line.content + ' ' }
+        return next
       })
+      setCurrentPosition(p => p + 1)
+      return
     }
-  }, [currentLineIndex])
+
+    setLines(prev => {
+      const next = [...prev]
+      const line = next[lineIdx]
+      next[lineIdx] = { ...line, content: line.content + char, color: ink }
+      return next
+    })
+    setCurrentPosition(p => p + 1)
+  }, [])
+
+  const waitCarriageReturn = useCallback(async () => {
+    return new Promise<void>((resolve) => {
+      carriageReturn()
+      setTimeout(resolve, 450)
+    })
+  }, [carriageReturn])
+
+  const injectCharacterWithWrap = useCallback(
+    async (char: string) => {
+      let guard = 0
+      while (stateRef.current.currentPosition >= CHARS_PER_LINE && guard < 8) {
+        guard += 1
+        await waitCarriageReturn()
+        await new Promise((r) => setTimeout(r, 50))
+      }
+      injectCharacter(char)
+    },
+    [injectCharacter, waitCarriageReturn]
+  )
+
+  const scrollToCurrentLine = useCallback(() => {
+    const el = paperRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [])
 
   const takeSnapshot = useCallback(() => {
     const snapshot: Snapshot = {
@@ -171,6 +209,9 @@ export function useTypewriter() {
     paperRef,
     handleKeyDown,
     carriageReturn,
+    injectCharacter,
+    injectCharacterWithWrap,
+    waitCarriageReturn,
     scrollToCurrentLine,
     takeSnapshot,
     changeInkColor,

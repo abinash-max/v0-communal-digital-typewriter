@@ -1,4 +1,5 @@
 export { Typewriter } from './typewriter'
+export type { TypewriterRef, GirlfriendSentencePack } from './typewriter'
 export { Paper } from './paper'
 export { Carriage } from './carriage'
 export { InkRibbon } from './ink-ribbon'

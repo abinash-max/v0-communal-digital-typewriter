@@ -24,8 +24,8 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: 'After You — A Communal Typewriter',
-  description: 'Type as if someone will come after you. A shared digital typewriter experience where writing stays, waiting for the next person.',
+  title: 'A Communal Digital Typewriter',
+  description: 'Use the typewriter: let her type by clicking the cute girl, or type yourself by clicking the typewriter keyboard.',
   generator: 'v0.app',
   icons: {
     icon: [

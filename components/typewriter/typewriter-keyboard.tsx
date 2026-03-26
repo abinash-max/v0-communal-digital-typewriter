@@ -87,6 +87,12 @@ function SketchyCircle({
   )
 }
 
+function dataKeyForLetter(letter: string) {
+  if (letter === ' ') return ' '
+  if (/^[A-Z]$/.test(letter)) return letter.toLowerCase()
+  return letter
+}
+
 function TypewriterKey({ 
   letter, 
   isPressed,
@@ -98,6 +104,7 @@ function TypewriterKey({
 }) {
   const keySize = size === 'space' ? 160 : 36
   const keyHeight = size === 'space' ? 28 : 36
+  const dataKey = dataKeyForLetter(letter)
   
   return (
     <div className="relative">
@@ -118,6 +125,7 @@ function TypewriterKey({
       
       {/* Key cap with 3D press */}
       <div
+        data-key={dataKey}
         className={cn(
           "relative flex items-center justify-center",
           size === 'space' 
@@ -190,7 +198,11 @@ export function TypewriterKeyboard({ pressedKey, className }: TypewriterKeyboard
   const normalizedKey = pressedKey?.toUpperCase() || null
   
   return (
-    <div className={cn("relative", className)}>
+    <div
+      data-typewriter-keyboard="true"
+      data-pressed-key={normalizedKey ? normalizedKey.toLowerCase() : ''}
+      className={cn("relative", className)}
+    >
       <SketchyFilter />
       
       {/* Typewriter body - hand-drawn style */}

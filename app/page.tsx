@@ -1,17 +1,28 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, type ComponentType } from 'react'
 import gsap from 'gsap'
 import { AnimatePresence, motion } from 'framer-motion'
 import Lottie from 'lottie-react'
-import { Typewriter, SnapshotStack, SnapshotGrid } from '@/components/typewriter'
-import StickyNoteCloud from '@/src/components/StickyNoteCloud'
+import {
+  Typewriter,
+  SnapshotStack,
+  SnapshotGrid,
+  type TypewriterRef,
+  type GirlfriendSentencePack,
+} from '@/components/typewriter'
+import StickyNoteCloud, {
+  type StickyNoteCloudHandle,
+} from '@/src/components/StickyNoteCloud'
 import FinalPage from '@/src/components/FinalPage'
 import Starfield from '@/src/components/Starfield'
 import SceneEntry from '@/src/scenes/SceneEntry'
+import SceneHome from '@/src/scenes/SceneHome'
 import SceneLibrary from '@/src/scenes/SceneLibrary'
 import femaleData from '@/src/assets/lottie/female.json'
 import type { Snapshot } from '@/hooks/use-typewriter'
+
+const FinalPageAny = FinalPage as unknown as ComponentType<any>
 
 function spawnParticleBurst(container: HTMLDivElement) {
   const cx = window.innerWidth / 2
@@ -56,18 +67,24 @@ function spawnParticleBurst(container: HTMLDivElement) {
 const sceneTransition = { duration: 0.8 }
 
 export default function Home() {
-  const [scene, setScene] = useState<'entry' | 'library' | 'typewriter' | 'final'>('entry')
+  const [scene, setScene] = useState<'entry' | 'home' | 'library' | 'typewriter' | 'final'>('home')
 
   const [snapshots, setSnapshots] = useState<Snapshot[]>([])
   const [showSnapshotGrid, setShowSnapshotGrid] = useState(false)
   const [wordEvent, setWordEvent] = useState({ word: '', id: 0 })
   const [wordHistory, setWordHistory] = useState<string[]>([])
   const [paperOpen, setPaperOpen] = useState(false)
+  const [sentencePack, setSentencePack] = useState<GirlfriendSentencePack | null>(null)
+  const [sentenceTrigger, setSentenceTrigger] = useState(0)
   const transitioningRef = useRef(false)
   const [isArriving, setIsArriving] = useState(false)
+  const [girlFollowPos, setGirlFollowPos] = useState<{ top: number; left: number } | null>(null)
+  const [lastKeyHit, setLastKeyHit] = useState<string | null>(null)
+  const [completedSentencePacks, setCompletedSentencePacks] = useState<GirlfriendSentencePack[]>([])
 
   const typewriterAreaRef = useRef<HTMLDivElement>(null)
-  const stickyCloudRef = useRef<{ collapseToCenter: () => void }>(null)
+  const typewriterRef = useRef<TypewriterRef>(null)
+  const stickyCloudRef = useRef<StickyNoteCloudHandle>(null)
   const mainContentRef = useRef<HTMLDivElement>(null)
   const particlesRef = useRef<HTMLDivElement>(null)
 
@@ -127,20 +144,68 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (scene !== 'typewriter') {
+    // Keep collected sentence packs for the final page.
+    if (scene !== 'typewriter' && scene !== 'final') {
       setPaperOpen(false)
+      setSentencePack(null)
+      setSentenceTrigger(0)
+      setGirlFollowPos(null)
+      setLastKeyHit(null)
+      setCompletedSentencePacks([])
     }
   }, [scene])
 
+  useEffect(() => {
+    if (scene !== 'typewriter') return
+    if (!paperOpen) {
+      setGirlFollowPos(null)
+      return
+    }
+
+    const keyboardEl = document.querySelector('[data-typewriter-keyboard="true"]') as HTMLElement | null
+    if (!keyboardEl) return
+
+    const hit = lastKeyHit
+    const key = hit === null ? null : hit === ' ' ? ' ' : hit.toLowerCase()
+
+    const keyEl =
+      key !== null
+        ? (keyboardEl.querySelector(`[data-key="${key}"]`) as HTMLElement | null)
+        : null
+
+    const anchorEl = keyEl ?? keyboardEl
+    const r = anchorEl.getBoundingClientRect()
+    const x = keyEl ? r.left + r.width / 2 : r.left + r.width * 0.78
+    const y = keyEl ? r.top + r.height / 2 : r.top + r.height * 0.35
+
+    setGirlFollowPos({
+      top: Math.max(20, y - 70),
+      left: Math.min(window.innerWidth - 40, x + 18),
+    })
+  }, [scene, paperOpen, lastKeyHit])
+
   return (
     <main className="min-h-screen bg-background relative">
-      <Starfield />
+      <Starfield opacity={scene === 'home' ? 0 : 1} count={560} />
 
       {/* Particle burst container — persists across scenes */}
       <div ref={particlesRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 50 }} />
 
       <AnimatePresence mode="wait">
-        {/* ── Entry scene ── */}
+        {/* ── Home first (typewriter-themed) — then space entry, library, typewriter ── */}
+        {scene === 'home' && (
+          <motion.div
+            key="home"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={sceneTransition}
+          >
+            <SceneHome onContinue={() => setScene('entry')} />
+          </motion.div>
+        )}
+
+        {/* ── Space entry (video + house) ── */}
         {scene === 'entry' && (
           <motion.div
             key="entry"
@@ -179,6 +244,8 @@ export default function Home() {
               ref={stickyCloudRef}
               word={wordEvent.word}
               trigger={wordEvent.id}
+              sentencePack={sentencePack}
+              sentenceTrigger={sentenceTrigger}
               anchorRef={typewriterAreaRef}
             />
 
@@ -189,9 +256,9 @@ export default function Home() {
               animate={
                 paperOpen
                   ? {
-                      top: 'calc(8% - 82px)',
-                      right: 'calc(2% - 0px)',
-                      left: 'auto',
+                      top: girlFollowPos ? `${girlFollowPos.top}px` : 'calc(12% - 82px)',
+                      left: girlFollowPos ? `${girlFollowPos.left}px` : 'auto',
+                      right: girlFollowPos ? 'auto' : '24px',
                       bottom: 'auto',
                       width: 80,
                       height: 80,
@@ -215,8 +282,13 @@ export default function Home() {
                   : undefined
               }
               transition={{ type: 'spring', stiffness: 70, damping: 14 }}
-              onClick={() => setPaperOpen(true)}
+              onClick={() => {
+                setPaperOpen(true)
+                setSentencePack(null)
+                queueMicrotask(() => typewriterRef.current?.startGirlfriendFlow())
+              }}
               className="female-lottie-wrap"
+              data-follow={paperOpen ? 'true' : 'false'}
               style={{
                 position: 'fixed',
                 zIndex: paperOpen ? 25 : 20,
@@ -226,8 +298,8 @@ export default function Home() {
                 alignItems: 'center',
                 overflow: 'visible',
                 background: 'transparent',
-                mixBlendMode: 'screen',
-                filter: 'contrast(1.1)',
+                mixBlendMode: 'normal',
+                filter: 'none',
               }}
             >
               <Lottie
@@ -239,8 +311,8 @@ export default function Home() {
                   width: '100%',
                   height: 'auto',
                   background: 'transparent',
-                  mixBlendMode: 'screen',
-                  filter: 'contrast(1.1)',
+                  mixBlendMode: 'normal',
+                  filter: 'none',
                 }}
               />
               {!paperOpen && (
@@ -256,62 +328,9 @@ export default function Home() {
               )}
             </motion.div>
 
-            {/* Right-side lined paper box */}
-            <AnimatePresence>
-              {paperOpen && (
-                <motion.div
-                  initial={{ opacity: 0, x: 80 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 40 }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
-                  style={{
-                    position: 'fixed',
-                    right: '2%',
-                    top: '8%',
-                    width: 300,
-                    height: 460,
-                    zIndex: 19,
-                    borderRadius: 4,
-                    boxShadow: '4px 4px 25px rgba(0,0,0,0.6)',
-                    overflow: 'hidden',
-                    backgroundColor: '#f5f0e8',
-                    backgroundImage:
-                      'repeating-linear-gradient(transparent, transparent 31px, rgba(160,140,100,0.3) 31px, rgba(160,140,100,0.3) 32px)',
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 44,
-                      top: 0,
-                      bottom: 0,
-                      width: 1,
-                      background: 'rgba(200,80,80,0.25)',
-                    }}
-                  />
-                  <textarea
-                    placeholder="write something for Aman..."
-                    style={{
-                      position: 'absolute',
-                      top: 16,
-                      left: 52,
-                      right: 12,
-                      bottom: 12,
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      fontFamily: "'Courier Prime', Courier, monospace",
-                      fontSize: 14,
-                      lineHeight: '32px',
-                      color: '#2a1a08',
-                      resize: 'none',
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Removed: right-side notepad panel (was shown after clicking the girl) */}
 
-            <div ref={mainContentRef}>
+            <div ref={mainContentRef} className="min-h-0">
               {/* Easter egg — constellation trigger */}
               <button
                 type="button"
@@ -330,47 +349,9 @@ export default function Home() {
                 </svg>
               </button>
 
-              <div className="flex flex-col lg:flex-row min-h-screen relative" style={{ zIndex: 1 }}>
-                {/* Left sidebar */}
-                <aside
-                  className="w-full lg:w-80 xl:w-96 p-6 lg:p-8 flex-shrink-0"
-                  style={{
-                    background: '#0d0d1a',
-                    borderRight: '1px solid rgba(200,144,42,0.15)',
-                  }}
-                >
-                  <div className="sticky top-8">
-                    <h1 className="font-serif text-3xl lg:text-4xl mb-6 text-balance" style={{ color: '#e8d5b0' }}>
-                      After You
-                    </h1>
-
-                    <div className="space-y-4 mb-8">
-                      <p className="text-sm leading-relaxed" style={{ color: '#a09070' }}>
-                        Type as if someone will come after you.
-                      </p>
-                      <p className="text-sm leading-relaxed" style={{ color: '#a09070' }}>
-                        Write a line, leave a thought, or finish someone else&apos;s sentence.
-                        What you type stays, waiting for the next person.
-                      </p>
-                      <p className="text-xs leading-relaxed pl-3" style={{ color: 'rgba(160,144,112,0.7)', borderLeft: '2px solid rgba(200,144,42,0.2)' }}>
-                        Use your keyboard like a typewriter. Drag the carriage to return.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-8">
-                      <div className="w-2 h-2 rounded-full bg-green-500/70" />
-                      <span className="text-xs" style={{ color: '#a09070' }}>you</span>
-                    </div>
-
-                    <SnapshotStack
-                      snapshots={snapshots}
-                      onViewAll={handleViewAllSnapshots}
-                    />
-                  </div>
-                </aside>
-
+              <div className="relative min-h-screen" style={{ zIndex: 1 }}>
                 {/* Main content - Typewriter */}
-                <div className="flex-1 flex items-start justify-center p-4 lg:p-8 pt-4 lg:pt-6">
+                <div className="flex min-h-screen items-start justify-center p-4 lg:p-10 pt-4 lg:pt-6">
                   {showSnapshotGrid ? (
                     <div className="w-full max-w-4xl">
                       <SnapshotGrid
@@ -379,8 +360,24 @@ export default function Home() {
                       />
                     </div>
                   ) : (
-                    <div ref={typewriterAreaRef}>
-                      <Typewriter onSnapshot={handleSnapshot} onWord={handleWord} isArriving={isArriving} />
+                    <div ref={typewriterAreaRef} className="min-h-0 w-full max-w-3xl">
+                      <Typewriter
+                        ref={typewriterRef}
+                        paperOpen={paperOpen}
+                        onSnapshot={handleSnapshot}
+                        onWord={handleWord}
+                        isArriving={isArriving}
+                        onKeyHit={(key) => setLastKeyHit(key)}
+                        onGirlfriendSticky={(pack) => {
+                          setSentencePack(pack)
+                          if (pack) setSentenceTrigger((t) => t + 1)
+                          if (pack) setCompletedSentencePacks((prev) => [...prev, pack])
+                        }}
+                        onGirlfriendComplete={() => {
+                          // Directly go to the final page when she finishes all 4.
+                          triggerFinalTransition()
+                        }}
+                      />
                     </div>
                   )}
                 </div>
@@ -404,9 +401,12 @@ export default function Home() {
             exit={{ opacity: 0 }}
             transition={sceneTransition}
           >
-            <FinalPage
+            <FinalPageAny
               wordHistory={wordHistory}
+              sentencePacks={completedSentencePacks}
               onBack={handleBack}
+              constellationAnimationData={undefined}
+              constellationAnimationPath={undefined}
             />
           </motion.div>
         )}
@@ -456,6 +456,13 @@ export default function Home() {
           border-left: 6px solid transparent;
           border-right: 6px solid transparent;
           border-top: 6px solid rgba(200,144,42,0.4);
+        }
+        @keyframes girlFloat {
+          0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg); }
+          50% { transform: translate3d(0, -10px, 0) rotate(1deg); }
+        }
+        .female-lottie-wrap[data-follow="true"] {
+          animation: girlFloat 1.9s ease-in-out infinite;
         }
       `}</style>
     </main>

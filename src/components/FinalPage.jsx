@@ -1,8 +1,19 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import gsap from "gsap"
 import LottiePlayer from "@/src/components/LottiePlayer"
+
+/**
+ * @typedef {{ en: string, hi: string, es: string, ja: string }} SentencePack
+ * @typedef {{
+ *   wordHistory?: string[],
+ *   sentencePacks?: SentencePack[],
+ *   onBack: () => void,
+ *   constellationAnimationData?: any,
+ *   constellationAnimationPath?: any,
+ * }} FinalPageProps
+ */
 
 const NOTE_PALETTES = [
   { bg: "#f5e6c8", color: "#2a1a08" },
@@ -36,7 +47,8 @@ function DenseStarfield() {
       speed: 3 + Math.random() * 3,
     }))
 
-    const SHOOTER_COUNT = 10
+    // More shooting stars for a richer final sky
+    const SHOOTER_COUNT = 26
     const shooters = Array.from({ length: SHOOTER_COUNT }, () =>
       spawnShooter(Math.random() * 15)
     )
@@ -46,12 +58,12 @@ function DenseStarfield() {
         x: Math.random(),
         y: Math.random() * 0.5,
         angle: Math.PI * 0.15 + Math.random() * 0.3,
-        speed: 0.3 + Math.random() * 0.4,
-        length: 0.04 + Math.random() * 0.06,
+        speed: 0.45 + Math.random() * 0.55,
+        length: 0.05 + Math.random() * 0.08,
         life: 0,
         maxLife: 0.8 + Math.random() * 0.4,
         cooldown: delay,
-        interval: 8 + Math.random() * 7,
+        interval: 4.2 + Math.random() * 4.2,
       }
     }
 
@@ -219,9 +231,10 @@ function BirthdayMessage() {
   const line1Ref = useRef(null)
   const line2Ref = useRef(null)
   const line3Ref = useRef(null)
+  const dobRef = useRef(null)
 
   useEffect(() => {
-    gsap.set([line1Ref.current, line2Ref.current, line3Ref.current], {
+    gsap.set([line1Ref.current, line2Ref.current, line3Ref.current, dobRef.current], {
       opacity: 0,
     })
     gsap.set(line1Ref.current, { scale: 0.95 })
@@ -231,19 +244,25 @@ function BirthdayMessage() {
       scale: 1,
       duration: 1.2,
       ease: "power2.out",
-      delay: 1.5,
+      delay: 0.6,
     })
     gsap.to(line2Ref.current, {
-      opacity: 0.8,
-      duration: 1,
+      opacity: 0.9,
+      duration: 0.7,
       ease: "power2.out",
-      delay: 3,
+      delay: 1.2,
     })
     gsap.to(line3Ref.current, {
-      opacity: 0.6,
-      duration: 1,
+      opacity: 0.85,
+      duration: 0.7,
       ease: "power2.out",
-      delay: 4.5,
+      delay: 1.8,
+    })
+    gsap.to(dobRef.current, {
+      opacity: 0.75,
+      duration: 0.6,
+      ease: "power2.out",
+      delay: 2.35,
     })
   }, [])
 
@@ -266,7 +285,7 @@ function BirthdayMessage() {
         style={{
           fontFamily: "var(--font-playfair), 'Playfair Display', serif",
           fontStyle: "italic",
-          fontSize: 42,
+          fontSize: 54,
           color: "#c8902a",
           letterSpacing: 4,
           textAlign: "center",
@@ -280,10 +299,11 @@ function BirthdayMessage() {
         ref={line2Ref}
         style={{
           fontFamily: "'Courier Prime', 'Courier New', monospace",
-          fontSize: 16,
-          color: "#e8d5b0",
+          fontSize: 22,
+          color: "rgba(232, 213, 176, 0.98)",
           textAlign: "center",
           marginBottom: 16,
+          textShadow: "0 0 18px rgba(200,144,42,0.22), 0 0 36px rgba(0,0,0,0.55)",
         }}
       >
         from a universe that speaks in many languages&hellip;
@@ -292,23 +312,237 @@ function BirthdayMessage() {
         ref={line3Ref}
         style={{
           fontFamily: "'Courier Prime', 'Courier New', monospace",
-          fontSize: 16,
-          color: "#e8d5b0",
+          fontSize: 22,
+          color: "rgba(232, 213, 176, 0.98)",
           textAlign: "center",
+          textShadow: "0 0 18px rgba(200,144,42,0.22), 0 0 36px rgba(0,0,0,0.55)",
         }}
       >
         and still finds its way to you.
+      </p>
+      <p
+        style={{
+          fontFamily: "'Courier Prime', 'Courier New', monospace",
+          fontSize: 18,
+          color: "rgba(232, 213, 176, 0.9)",
+          textAlign: "center",
+          marginTop: 14,
+          letterSpacing: 3,
+          textShadow: "0 0 14px rgba(200,144,42,0.18), 0 0 28px rgba(0,0,0,0.55)",
+        }}
+        ref={dobRef}
+      >
+        27.03.1987
       </p>
     </div>
   )
 }
 
-export default function FinalPage({
-  wordHistory = [],
-  onBack,
-  constellationAnimationData,
-  constellationAnimationPath,
-}) {
+function EnglishStickyNotes({ lines }) {
+  const containerRef = useRef(null)
+
+  const notes = useMemo(() => {
+    const items = (lines ?? [])
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((text, i) => ({
+        key: `en-${i}`,
+        text,
+        palette: NOTE_PALETTES[i % NOTE_PALETTES.length],
+        rotation: -5 + Math.random() * 10,
+        floatDur: 2.6 + Math.random() * 1.8,
+        floatDelay: Math.random() * 0.4,
+      }))
+
+    return items
+  }, [lines])
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const items = el.querySelectorAll("[data-en-note]")
+    if (items.length === 0) return
+
+    gsap.set(items, { opacity: 0, scale: 0.7, y: "+=18" })
+    gsap.to(items, {
+      opacity: 0.92,
+      scale: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "back.out(1.15)",
+      stagger: { each: 0.06, from: "start" },
+    })
+
+    const floats = Array.from(items).map((node, i) => {
+      const dur = notes[i]?.floatDur ?? 3.2
+      const delay = notes[i]?.floatDelay ?? 0
+      return gsap.to(node, {
+        y: `+=${10 + Math.random() * 10}`,
+        x: `+=${-10 + Math.random() * 20}`,
+        rotation: `+=${-2 + Math.random() * 4}`,
+        duration: dur,
+        delay,
+        yoyo: true,
+        repeat: -1,
+        ease: "sine.inOut",
+      })
+    })
+    return () => floats.forEach((t) => t.kill())
+  }, [notes])
+
+  if (notes.length === 0) return null
+
+  // Fixed positions around center, leaving the BirthdayMessage area clear.
+  const positions = [
+    { left: "10%", top: "18%" },
+    { left: "66%", top: "18%" },
+    { left: "10%", top: "62%" },
+    { left: "66%", top: "62%" },
+  ]
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 3,
+        pointerEvents: "none",
+      }}
+    >
+      {notes.map((n, i) => (
+        <div
+          key={n.key}
+          data-en-note
+          style={{
+            position: "absolute",
+            left: positions[i]?.left ?? "10%",
+            top: positions[i]?.top ?? "18%",
+            width: "min(340px, 34vw)",
+            minHeight: 150,
+            background: n.palette.bg,
+            color: n.palette.color,
+            borderRadius: 8,
+            boxShadow: "0 14px 46px rgba(0,0,0,0.55)",
+            padding: "18px 18px 14px",
+            transform: `rotate(${n.rotation}deg)`,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'Courier Prime', 'Courier New', monospace",
+              fontSize: 13,
+              lineHeight: 1.65,
+              opacity: 0.98,
+              wordBreak: "break-word",
+            }}
+          >
+            {n.text}
+          </div>
+          <div
+            style={{
+              marginTop: 10,
+              fontFamily: "'Courier Prime', 'Courier New', monospace",
+              fontSize: 10,
+              opacity: 0.55,
+              alignSelf: "flex-end",
+              letterSpacing: 2,
+            }}
+          >
+            EN
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function useSavedEnglishNotes() {
+  const KEY = "saved-english-sticky-notes-v1"
+
+  const readAll = () => {
+    try {
+      const raw = localStorage.getItem(KEY)
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+
+  const writeAll = (arr) => {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(arr))
+    } catch {}
+  }
+
+  return { KEY, readAll, writeAll }
+}
+
+/** @param {FinalPageProps} props */
+export default function FinalPage(props) {
+  const {
+    wordHistory,
+    sentencePacks,
+    onBack,
+    constellationAnimationData,
+    constellationAnimationPath,
+  } = props
+
+  const resolvedWordHistory = wordHistory ?? []
+  const resolvedSentencePacks = sentencePacks ?? []
+  const hasSentenceNotes = resolvedSentencePacks.length > 0
+
+  const englishLinesFromPacks = useMemo(
+    () => resolvedSentencePacks.slice(0, 4).map((p) => p?.en).filter(Boolean),
+    [resolvedSentencePacks]
+  )
+
+  const { readAll, writeAll } = useSavedEnglishNotes()
+  const [savedOpen, setSavedOpen] = useState(false)
+  const [saved, setSaved] = useState([])
+  const [activeLines, setActiveLines] = useState([])
+
+  useEffect(() => {
+    setSaved(readAll())
+  }, [])
+
+  useEffect(() => {
+    if (hasSentenceNotes) setActiveLines(englishLinesFromPacks)
+  }, [hasSentenceNotes, englishLinesFromPacks])
+
+  const handleSave = useCallback(() => {
+    const lines = activeLines.length > 0 ? activeLines : englishLinesFromPacks
+    if (!lines || lines.length === 0) return
+
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      createdAt: new Date().toISOString(),
+      lines: lines.slice(0, 4),
+    }
+
+    const next = [entry, ...readAll()]
+    writeAll(next)
+    setSaved(next)
+    setSavedOpen(true)
+  }, [activeLines, englishLinesFromPacks, readAll, writeAll])
+
+  const handleDeleteSaved = useCallback(
+    (id) => {
+      const next = readAll().filter((e) => e?.id !== id)
+      writeAll(next)
+      setSaved(next)
+      if (activeLines?.length && saved.find((e) => e?.id === id)) {
+        setActiveLines(englishLinesFromPacks)
+      }
+    },
+    [readAll, writeAll, activeLines, saved, englishLinesFromPacks]
+  )
+
   const [constellationData, setConstellationData] = useState(
     constellationAnimationData ?? null
   )
@@ -362,10 +596,14 @@ export default function FinalPage({
         </div>
       )}
 
-      {/* Layer 3 — Floating word notes */}
-      <WordNotes words={wordHistory} />
+      {/* Layer 3 — Notes */}
+      {hasSentenceNotes ? (
+        <EnglishStickyNotes lines={activeLines.length ? activeLines : englishLinesFromPacks} />
+      ) : (
+        <WordNotes words={resolvedWordHistory} />
+      )}
 
-      {/* Layer 4 — Birthday message */}
+      {/* Layer 4 — Center message (original) */}
       <BirthdayMessage />
 
       {/* Layer 5 — Bottom controls */}
@@ -408,6 +646,42 @@ export default function FinalPage({
 
         <button
           type="button"
+          onClick={handleSave}
+          style={{
+            background: "none",
+            border: "1px solid rgba(200,144,42,0.25)",
+            borderRadius: 999,
+            fontFamily: "'Courier Prime', 'Courier New', monospace",
+            fontSize: 11,
+            color: "rgba(232,213,176,0.85)",
+            opacity: 0.85,
+            cursor: "pointer",
+            padding: "8px 12px",
+          }}
+        >
+          save notes
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSavedOpen((v) => !v)}
+          style={{
+            background: "none",
+            border: "1px solid rgba(200,144,42,0.25)",
+            borderRadius: 999,
+            fontFamily: "'Courier Prime', 'Courier New', monospace",
+            fontSize: 11,
+            color: "rgba(232,213,176,0.85)",
+            opacity: 0.85,
+            cursor: "pointer",
+            padding: "8px 12px",
+          }}
+        >
+          saved ({saved.length})
+        </button>
+
+        <button
+          type="button"
           style={{
             background: "none",
             border: "none",
@@ -440,6 +714,166 @@ export default function FinalPage({
           </svg>
         </button>
       </div>
+
+      {savedOpen && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: 18,
+            transform: "translateX(-50%)",
+            width: "min(980px, 94vw)",
+            zIndex: 6,
+            background: "rgba(3,3,8,0.72)",
+            border: "1px solid rgba(200,144,42,0.18)",
+            borderRadius: 14,
+            boxShadow: "0 18px 60px rgba(0,0,0,0.6)",
+            backdropFilter: "blur(10px)",
+            padding: "12px 14px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 10,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'Courier Prime', 'Courier New', monospace",
+                fontSize: 12,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                color: "rgba(232,213,176,0.8)",
+              }}
+            >
+              saved notes
+            </div>
+            <button
+              type="button"
+              onClick={() => setSavedOpen(false)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(232,213,176,0.7)",
+                cursor: "pointer",
+                fontFamily: "'Courier Prime', 'Courier New', monospace",
+                fontSize: 12,
+                opacity: 0.8,
+              }}
+            >
+              close
+            </button>
+          </div>
+
+          {saved.length === 0 ? (
+            <div
+              style={{
+                color: "rgba(232,213,176,0.55)",
+                fontSize: 12,
+                fontFamily: "'Courier Prime', 'Courier New', monospace",
+              }}
+            >
+              nothing saved yet
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 10,
+                maxHeight: "34vh",
+                overflow: "auto",
+                paddingRight: 4,
+              }}
+            >
+              {saved.map((e) => (
+                <div
+                  key={e.id}
+                  style={{
+                    border: "1px solid rgba(200,144,42,0.14)",
+                    borderRadius: 12,
+                    padding: 10,
+                    background: "rgba(10,10,18,0.55)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: "rgba(232,213,176,0.75)",
+                        fontFamily: "'Courier Prime', 'Courier New', monospace",
+                        fontSize: 11,
+                      }}
+                    >
+                      {new Date(e.createdAt).toLocaleString()}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveLines(e.lines ?? [])}
+                      style={{
+                        background: "none",
+                        border: "1px solid rgba(200,144,42,0.22)",
+                        color: "rgba(232,213,176,0.75)",
+                        borderRadius: 999,
+                        padding: "5px 10px",
+                        cursor: "pointer",
+                        fontFamily: "'Courier Prime', 'Courier New', monospace",
+                        fontSize: 11,
+                      }}
+                    >
+                      load
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      color: "rgba(232,213,176,0.65)",
+                      fontFamily: "'Courier Prime', 'Courier New', monospace",
+                      fontSize: 11,
+                      lineHeight: 1.45,
+                      maxHeight: 86,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {(e.lines?.[0] ?? "").slice(0, 140)}
+                    {(e.lines?.[0] ?? "").length > 140 ? "…" : ""}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSaved(e.id)}
+                      style={{
+                        background: "none",
+                        border: "1px solid rgba(200,80,80,0.25)",
+                        color: "rgba(255,210,210,0.75)",
+                        borderRadius: 999,
+                        padding: "6px 10px",
+                        cursor: "pointer",
+                        fontFamily: "'Courier Prime', 'Courier New', monospace",
+                        fontSize: 11,
+                      }}
+                    >
+                      delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
